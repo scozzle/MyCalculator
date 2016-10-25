@@ -24,16 +24,11 @@ class ViewController: UIViewController {
     
     // numerical button pressed
     @IBAction private func buttonPressed(_ sender: UIButton) {
-        let prevText = display.text!
+        //let prevText = display.text!
         let newText = middleOfTyping ? display.text! + sender.currentTitle! : sender.currentTitle!
-        
-        // update the display and append the button symbol iff the result is a valid number
-        if CalculatorBrain.containsValidNumber(newText){
-            display.text = newText
-            middleOfTyping = true
-        } else {
-            display.text = prevText
-        }
+
+        display.text = newText
+        middleOfTyping = true
     }
     
     // the number on the display
@@ -42,7 +37,7 @@ class ViewController: UIViewController {
             return Double(display.text!)!
         }
         set(newVal) {
-            display.text = String(newVal)
+            display.text = (newVal.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(newVal)) : String(newVal)
         }
     }
     
@@ -67,7 +62,9 @@ class ViewController: UIViewController {
     
     // operation button pressed, perform operation
     @IBAction private func performOperation(_ sender: UIButton) {
-        
+        if !brain.containsValidNumber(display.text!) {
+            return
+        }
         // set the operand to the current number on display
         brain.setOperand(displayValue)
         

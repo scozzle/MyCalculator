@@ -98,6 +98,7 @@ class CalculatorBrain {
                 switch symbol {
                 case .Constant: description = ""
                 case .Binary: description = String(accumulator)
+                case .Unary: description = String(accumulator)
                 default: break
                 }
             }
@@ -109,7 +110,7 @@ class CalculatorBrain {
             case .Constant:
                 description = isPartialResult ? description + operation : operation
             case .Unary:
-                description = isPartialResult ? description + operation + "(\(String(accumulator)))" : operation + "(\(description))"
+                description = isPartialResult ? description + operation + "(\(String(accumulator)))" : (operation + "(\(description))")
             case .Binary:
                 description = isPartialResult ? description + String(accumulator) + operation : description + operation
             case .Equals:
@@ -139,7 +140,7 @@ class CalculatorBrain {
     }
     
     // check if numString contains a valid number
-    static func containsValidNumber(_ numString: String) -> Bool {
+    func containsValidNumber(_ numString: String) -> Bool {
         if Double(numString) != nil {
             return true
         } else {
