@@ -73,13 +73,12 @@ class ViewController: UIViewController {
         
         // perform the operation
         if let operation = sender.currentTitle {
-            brain.addDescription(operation, middleOfTyping)
-            brain.performOperation(operation)
+            brain.performOperation(operation, wasTyping: middleOfTyping)
         }
         
         // update the displays
         displayValue = brain.output
-        equationValue = brain.description
+        equationValue = brain.desc
         
         // no longer in the middle of typing numbers
         middleOfTyping = false

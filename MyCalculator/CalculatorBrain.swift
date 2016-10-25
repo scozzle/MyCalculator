@@ -9,7 +9,8 @@
 import Foundation
 
 class CalculatorBrain {
-    // the current accumulator
+    
+    // the current accumulator or operand
     private var accumulator = 0.0
     
     // the output
@@ -19,7 +20,7 @@ class CalculatorBrain {
         }
     }
     
-    // is it a partial result
+    // is it a partial result, i.e. there is pending binary operation
     var isPartialResult: Bool {
         get {
             return (pending != nil)
@@ -34,7 +35,7 @@ class CalculatorBrain {
         case Equals
     }
     
-    // all operations possible
+    // all operations available
     private var operations: Dictionary<String,OperatorType> = [
         "π": OperatorType.Constant(M_PI),
         "e": OperatorType.Constant(M_E),
@@ -51,7 +52,7 @@ class CalculatorBrain {
         "=": OperatorType.Equals
     ]
     
-    // saved info when binary operation pressed
+    // model the pending binary operation info saved for later
     private struct pendingBinaryOperationInfo {
         var binaryFunction: (Double, Double) -> Double
         var firstOperand: Double
@@ -63,11 +64,10 @@ class CalculatorBrain {
         
     }
     
-    // the instantiation of the pending info struct
+    // the pending binary info
     private var pending: pendingBinaryOperationInfo?
     
-    // execute the pending binary operation
-    // note that if there was no pending op, nothing is done
+    // execute the pending binary operation if there is one
     private func executePendingBinaryOp() {
         if pending != nil {
             accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
@@ -75,9 +75,53 @@ class CalculatorBrain {
         }
     }
     
+    
+    // the description string
+    private var description = ""
+    
+    // does the current description end with an operand?
+    private var endsWithOperand = false
+    
+    // description string accessible from outside
+    var desc: String {
+        get {
+            return description
+        }
+    }
+    
+    // add description depending on the operation
+    private func addDescription(_ operation: String, middleOfTyping: Bool) {
+        
+        // check description reset conditions first
+        if !isPartialResult && middleOfTyping {
+            if let symbol = operations[operation] {
+                switch symbol {
+                case .Constant: description = ""
+                case .Binary: description = String(accumulator)
+                default: break
+                }
+            }
+        }
+        
+        // add appropriate description
+        if let symbol = operations[operation] {
+            switch symbol {
+            case .Constant:
+                description = isPartialResult ? description + operation : operation
+            case .Unary:
+                description = isPartialResult ? description + operation + "(\(String(accumulator)))" : operation + "(\(description))"
+            case .Binary:
+                description = isPartialResult ? description + String(accumulator) + operation : description + operation
+            case .Equals:
+                description = isPartialResult ? (endsWithOperand ? description : description + String(accumulator)) : (description)
+            }
+        }
+    }
+    
     // perform the operation given in the argument
-    func performOperation(_ operation: String) {
-        //addDescription(operation)
+    func performOperation(_ operation: String, wasTyping: Bool) {
+        addDescription(operation, middleOfTyping: wasTyping)
+        endsWithOperand = true
         if let symbol = operations[operation] {
             switch symbol {
             case .Constant(let value):
@@ -87,10 +131,10 @@ class CalculatorBrain {
             case .Binary(let function):
                 executePendingBinaryOp()
                 pending = pendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
+                endsWithOperand = false
             case .Equals:
                 executePendingBinaryOp()
             }
-            // print(description)
         }
     }
     
@@ -103,54 +147,10 @@ class CalculatorBrain {
         }
     }
     
-    // description string
-    var description = ""
-    
-    // equation state
-    private var equationState = EquationState.Partial
-    private enum EquationState {
-        case Partial
-        case Complete
-    }
-    
-    // add description depending on the operation
-    func addDescription(_ operation: String, _ middleOfTyping: Bool) {
-        
-        if let symbol = operations[operation] {
-            let resetCondition1 = (equationState == EquationState.Complete)
-            
-            if middleOfTyping && resetCondition1 {
-                description = String(accumulator)
-            }
-            
-            // update as necessary
-            switch symbol {
-            case .Constant:
-                // checking for reset condition
-                if resetCondition1 {
-                    description = String(accumulator)
-                }
-                description = (equationState == EquationState.Partial) ? description + operation : operation
-                equationState = EquationState.Complete
-            case .Unary:
-                description = (equationState == EquationState.Partial) ? description + operation + String(accumulator) : operation + "(" + description + ")"
-                equationState = EquationState.Complete
-            case .Binary:
-                description = (equationState == EquationState.Partial) ? description + String(accumulator) + operation : description + operation
-                equationState = EquationState.Partial
-            case .Equals:
-                description = (equationState == EquationState.Partial) ? description + String(accumulator) : description
-                equationState = EquationState.Complete
-            }
-        }
-    }
-    
     // reset everything
     func reset() {
         accumulator = 0.0
         pending = nil
         description = ""
-        equationState = EquationState.Partial
     }
-    
 }
