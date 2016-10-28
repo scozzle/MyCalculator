@@ -22,9 +22,32 @@ class ViewController: UIViewController {
     // the equation
     @IBOutlet private weak var equation: UILabel!
     
+    // backspace button
+    @IBAction func backspace(_ sender: UIButton) {
+        // if not middleOfTyping => erase entire thing, put space there
+        // if middleOfTyping => get the current string, cut off end if possible
+        
+        if middleOfTyping {
+            if displayValue != nil {
+                var currentText = display.text!
+                currentText.remove(at: currentText.index(before: currentText.endIndex))
+                if currentText == "" {
+                    displayValue = nil
+                } else {
+                    displayValue = Double(currentText)
+                }
+            }
+        } else {
+            displayValue = nil
+        }
+    }
+    
     // numerical button pressed
     @IBAction private func buttonPressed(_ sender: UIButton) {
-        //let prevText = display.text!
+        // dirty here, clean up 
+        if display.text! == " " {
+            display.text = ""
+        }
         let newText = middleOfTyping ? display.text! + sender.currentTitle! : sender.currentTitle!
 
         display.text = newText
@@ -32,12 +55,21 @@ class ViewController: UIViewController {
     }
     
     // the number on the display
-    private var displayValue: Double {
+    private var displayValue: Double? {
         get {
-            return Double(display.text!)!
+            return display.text == " " ? nil : Double(display.text!)!
         }
         set(newVal) {
-            display.text = (newVal.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(newVal)) : String(newVal)
+            if newVal == nil {
+                display.text = " "
+            } else {
+                // using NSFormatter and NSNumber so that number of fractional digits shown is 6 in displayText
+                let formatter = NumberFormatter()
+                formatter.maximumFractionDigits = 6
+                let newText = (newVal!.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(newVal!)) : String(newVal!)
+                let nsNumber = NSNumber(value: Double(newText)!)
+                display.text = formatter.string(from: nsNumber)
+            }
         }
     }
     
@@ -62,11 +94,11 @@ class ViewController: UIViewController {
     
     // operation button pressed, perform operation
     @IBAction private func performOperation(_ sender: UIButton) {
-        if !brain.containsValidNumber(display.text!) {
+        if !CalculatorBrain.containsValidNumber(display.text!) {
             return
         }
         // set the operand to the current number on display
-        brain.setOperand(displayValue)
+        brain.setOperand(displayValue!)
         
         // perform the operation
         if let operation = sender.currentTitle {
@@ -81,4 +113,3 @@ class ViewController: UIViewController {
         middleOfTyping = false
     }
 }
-

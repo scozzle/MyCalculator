@@ -33,6 +33,7 @@ class CalculatorBrain {
         case Unary((Double) -> Double)
         case Binary((Double,Double) -> Double)
         case Equals
+        case Random(() -> Double)
     }
     
     // all operations available
@@ -49,7 +50,8 @@ class CalculatorBrain {
         "÷": OperatorType.Binary({$0 / $1}),
         "-": OperatorType.Binary({$0 - $1}),
         "^": OperatorType.Binary(pow),
-        "=": OperatorType.Equals
+        "=": OperatorType.Equals,
+        "Ran": OperatorType.Random(drand48)
     ]
     
     // model the pending binary operation info saved for later
@@ -90,15 +92,15 @@ class CalculatorBrain {
     }
     
     // add description depending on the operation
-    private func addDescription(_ operation: String, middleOfTyping: Bool) {
+    private func addDescription(_ operation: String, middleOfTyping: Bool, wasPartialResult: Bool, accum: Double, endedWithNum: Bool, rand: Double?) {
         
         // check description reset conditions first
-        if !isPartialResult && middleOfTyping {
+        if !wasPartialResult && middleOfTyping {
             if let symbol = operations[operation] {
                 switch symbol {
                 case .Constant: description = ""
-                case .Binary: description = String(accumulator)
-                case .Unary: description = String(accumulator)
+                case .Binary: description = String(accum)
+                case .Unary: description = String(accum)
                 default: break
                 }
             }
@@ -108,20 +110,27 @@ class CalculatorBrain {
         if let symbol = operations[operation] {
             switch symbol {
             case .Constant:
-                description = isPartialResult ? description + operation : operation
+                description = wasPartialResult ? description + operation : operation
             case .Unary:
-                description = isPartialResult ? description + operation + "(\(String(accumulator)))" : (operation + "(\(description))")
+                description = wasPartialResult ? description + operation + "(\(String(accum)))" : (operation + "(\(description))")
             case .Binary:
-                description = isPartialResult ? description + String(accumulator) + operation : description + operation
+                description = wasPartialResult ? description + String(accum) + operation : description + operation
             case .Equals:
-                description = isPartialResult ? (endsWithOperand ? description : description + String(accumulator)) : (description)
+                description = wasPartialResult ? (endedWithNum ? description : description + String(accum)) : (description)
+            case .Random:
+                description = wasPartialResult ? description + "\(rand!)" : "\(rand!)"
             }
         }
     }
     
     // perform the operation given in the argument
     func performOperation(_ operation: String, wasTyping: Bool) {
-        addDescription(operation, middleOfTyping: wasTyping)
+        // saving info to add description after performing the operation
+        let wasPartial = isPartialResult
+        let prevAccumulator = accumulator
+        let endedWithOperand = endsWithOperand
+        var random: Double? = nil
+        
         endsWithOperand = true
         if let symbol = operations[operation] {
             switch symbol {
@@ -135,12 +144,17 @@ class CalculatorBrain {
                 endsWithOperand = false
             case .Equals:
                 executePendingBinaryOp()
+            case .Random(let function):
+                accumulator = function()
+                random = accumulator
             }
         }
+        addDescription(operation, middleOfTyping: wasTyping, wasPartialResult: wasPartial, accum: prevAccumulator, endedWithNum: endedWithOperand, rand: random)
+        
     }
     
     // check if numString contains a valid number
-    func containsValidNumber(_ numString: String) -> Bool {
+    static func containsValidNumber(_ numString: String) -> Bool {
         if Double(numString) != nil {
             return true
         } else {
