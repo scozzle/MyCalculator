@@ -13,6 +13,19 @@ class CalculatorBrain {
     // the current accumulator or operand
     private var accumulator = 0.0
     
+    // the description string
+    private var description = ""
+    
+    // does the current description end with an operand?
+    private var endsWithOperand = false
+    
+    // description string accessible from outside
+    var desc: String {
+        get {
+            return description
+        }
+    }
+    
     // the output
     var output: Double {
         get {
@@ -60,12 +73,6 @@ class CalculatorBrain {
         var firstOperand: Double
     }
     
-    // set the operand
-    func setOperand(_ operand: Double) {
-        accumulator = operand
-        
-    }
-    
     // the pending binary info
     private var pending: pendingBinaryOperationInfo?
     
@@ -77,82 +84,6 @@ class CalculatorBrain {
         }
     }
     
-    
-    // the description string
-    private var description = ""
-    
-    // does the current description end with an operand?
-    private var endsWithOperand = false
-    
-    // description string accessible from outside
-    var desc: String {
-        get {
-            return description
-        }
-    }
-    
-    // add description depending on the operation
-    private func addDescription(_ operation: String, middleOfTyping: Bool, wasPartialResult: Bool, accum: Double, endedWithNum: Bool, rand: Double?) {
-        
-        // check description reset conditions first
-        if !wasPartialResult && middleOfTyping {
-            if let symbol = operations[operation] {
-                switch symbol {
-                case .Constant: description = ""
-                case .Binary: description = String(accum)
-                case .Unary: description = String(accum)
-                default: break
-                }
-            }
-        }
-        
-        // add appropriate description
-        if let symbol = operations[operation] {
-            switch symbol {
-            case .Constant:
-                description = wasPartialResult ? description + operation : operation
-            case .Unary:
-                description = wasPartialResult ? description + operation + "(\(String(accum)))" : (operation + "(\(description))")
-            case .Binary:
-                description = wasPartialResult ? description + String(accum) + operation : description + operation
-            case .Equals:
-                description = wasPartialResult ? (endedWithNum ? description : description + String(accum)) : (description)
-            case .Random:
-                description = wasPartialResult ? description + "\(rand!)" : "\(rand!)"
-            }
-        }
-    }
-    
-    // perform the operation given in the argument
-    func performOperation(_ operation: String, wasTyping: Bool) {
-        // saving info to add description after performing the operation
-        let wasPartial = isPartialResult
-        let prevAccumulator = accumulator
-        let endedWithOperand = endsWithOperand
-        var random: Double? = nil
-        
-        endsWithOperand = true
-        if let symbol = operations[operation] {
-            switch symbol {
-            case .Constant(let value):
-                accumulator = value
-            case .Unary(let function):
-                accumulator = function(accumulator)
-            case .Binary(let function):
-                executePendingBinaryOp()
-                pending = pendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
-                endsWithOperand = false
-            case .Equals:
-                executePendingBinaryOp()
-            case .Random(let function):
-                accumulator = function()
-                random = accumulator
-            }
-        }
-        addDescription(operation, middleOfTyping: wasTyping, wasPartialResult: wasPartial, accum: prevAccumulator, endedWithNum: endedWithOperand, rand: random)
-        
-    }
-    
     // check if numString contains a valid number
     static func containsValidNumber(_ numString: String) -> Bool {
         if Double(numString) != nil {
@@ -162,10 +93,91 @@ class CalculatorBrain {
         }
     }
     
+    // set the operand
+    func setOperand(_ operand: Double) {
+        accumulator = operand
+        //        internalProgram.append(operand)
+        
+    }
+    
     // reset everything
     func reset() {
         accumulator = 0.0
         pending = nil
         description = ""
+        endsWithOperand = false
+        //internalProgram.removeAll()
     }
+    
+    
+    // perform the operation given in the argument
+    func performOperation(_ operation: String) {
+
+        // variable used if "Rand" operation is performed
+        var random: Double? = nil
+        
+        if let symbol = operations[operation] {
+            switch symbol {
+            case .Constant(let value):
+                
+                if endsWithOperand {
+                    reset()
+                }
+                
+                description = isPartialResult ? description + operation : operation
+                
+                accumulator = value
+                
+                endsWithOperand = true
+                
+            case .Unary(let function):
+                
+                description = isPartialResult ? description + operation + "(\(String(accumulator)))" : (endsWithOperand ? operation + "(\(description))" : operation + "(\(String(accumulator)))")
+                
+                accumulator = function(accumulator)
+                
+                endsWithOperand = true
+                
+            case .Binary(let function):
+                print(accumulator)
+                description = isPartialResult ? description + String(accumulator) + operation : (endsWithOperand ? description + operation : String(accumulator) + operation)
+                
+                executePendingBinaryOp()
+                pending = pendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
+                
+                endsWithOperand = false
+                
+            case .Equals:
+                
+                description = isPartialResult ? (endsWithOperand ? description : description + String(accumulator)) : (description)
+                
+                executePendingBinaryOp()
+                
+                endsWithOperand = true
+                
+            case .Random(let function):
+                random = function()
+                
+                description = isPartialResult ? description + "\(random!)" : "\(random!)"
+                
+                accumulator = random!
+                
+                endsWithOperand = true
+            }
+        }
+    }
+    
+    // storing program
+    //private var internalProgram = [AnyObject]()
+    //typealias PropertyList = AnyObject
+/*    var program: PropertyList {
+        get {
+            return internalProgram
+        }
+        set {
+            reset()
+        }
+    }*/
+    
+    
 }

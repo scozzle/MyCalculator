@@ -15,18 +15,73 @@ class ViewController: UIViewController {
     
     // the user in the middle of typing an operand?
     private var middleOfTyping = false
+    
+    // number of fractional digits
+    private var numFractionalDigits = 6
 
+    // should reset brain?
+    private var shouldResetBrain = false
+    
     // the display
     @IBOutlet private weak var display: UILabel!
     
     // the equation
     @IBOutlet private weak var equation: UILabel!
     
-    // backspace button
-    @IBAction func backspace(_ sender: UIButton) {
-        // if not middleOfTyping => erase entire thing, put space there
-        // if middleOfTyping => get the current string, cut off end if possible
+    // format the double to have at most i fractional digits and return the string form
+    private func cutFractional(_ val: Double, i: Int) -> String{
+        let formatter = NumberFormatter()
+        formatter.maximumFractionDigits = i
+        let newText = (val.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(val)) : String(val)
+        let nsNumber = NSNumber(value: Double(newText)!)
+        return formatter.string(from: nsNumber)!
         
+    }
+    
+    // the number on the display
+    private var displayValue: Double? {
+        get {
+            return display.text == " " ? nil : Double(display.text!)
+        }
+        set(newVal) {
+            if newVal == nil {
+                display.text = " "
+            } else {
+                display.text = cutFractional(newVal!, i: numFractionalDigits)
+            }
+        }
+    }
+    
+    // numerical button pressed
+    @IBAction private func buttonPressed(_ sender: UIButton) {
+        if display.text == " " || (!brain.isPartialResult && !middleOfTyping) {
+            displayValue = Double(sender.currentTitle!)
+            shouldResetBrain = true
+        } else {
+            let newText = middleOfTyping ? display.text! + sender.currentTitle! : sender.currentTitle!
+            displayValue = Double(newText)
+        }
+        middleOfTyping = true
+    }
+    
+    // dot pressed
+    @IBAction func dotPressed(_ sender: UIButton) {
+         // if does not end with dot, add dot at the end
+        
+        // if nothing in display set to dot
+        if display.text == " " || (!brain.isPartialResult && !middleOfTyping) {
+            display.text = "."
+            shouldResetBrain = true
+        } else {
+            if display.text?.range(of: ".") == nil {
+                display.text = display.text! + "."
+            }
+        }
+        middleOfTyping = true
+    }
+    
+    // backspace button
+    @IBAction private func backspace(_ sender: UIButton) {
         if middleOfTyping {
             if displayValue != nil {
                 var currentText = display.text!
@@ -42,38 +97,7 @@ class ViewController: UIViewController {
         }
     }
     
-    // numerical button pressed
-    @IBAction private func buttonPressed(_ sender: UIButton) {
-        // dirty here, clean up 
-        if display.text! == " " {
-            display.text = ""
-        }
-        let newText = middleOfTyping ? display.text! + sender.currentTitle! : sender.currentTitle!
-
-        display.text = newText
-        middleOfTyping = true
-    }
-    
-    // the number on the display
-    private var displayValue: Double? {
-        get {
-            return display.text == " " ? nil : Double(display.text!)!
-        }
-        set(newVal) {
-            if newVal == nil {
-                display.text = " "
-            } else {
-                // using NSFormatter and NSNumber so that number of fractional digits shown is 6 in displayText
-                let formatter = NumberFormatter()
-                formatter.maximumFractionDigits = 6
-                let newText = (newVal!.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(newVal!)) : String(newVal!)
-                let nsNumber = NSNumber(value: Double(newText)!)
-                display.text = formatter.string(from: nsNumber)
-            }
-        }
-    }
-    
-    // the equation string
+    // equation string with "=" or "..." added depending on result partial or not
     private var equationValue: String {
         get {
             return equation.text!
@@ -85,7 +109,7 @@ class ViewController: UIViewController {
     }
     
     // reset the calculator
-    @IBAction func reset(_ sender: UIButton) {
+    @IBAction private func reset(_ sender: UIButton) {
         brain.reset()
         middleOfTyping = false
         equation.text = "0"
@@ -94,15 +118,24 @@ class ViewController: UIViewController {
     
     // operation button pressed, perform operation
     @IBAction private func performOperation(_ sender: UIButton) {
+        // check if the string in display is a valid number first
         if !CalculatorBrain.containsValidNumber(display.text!) {
             return
         }
+        
+        // if new equation is starting, reset brain
+        if shouldResetBrain {
+            brain.reset()
+            print("here")
+            shouldResetBrain = false
+        }
+        
         // set the operand to the current number on display
         brain.setOperand(displayValue!)
         
         // perform the operation
         if let operation = sender.currentTitle {
-            brain.performOperation(operation, wasTyping: middleOfTyping)
+            brain.performOperation(operation)
         }
         
         // update the displays
