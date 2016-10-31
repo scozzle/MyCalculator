@@ -128,14 +128,8 @@ class CalculatorBrain {
             switch symbol {
             case .Constant(let value):
                 
-                if endsWithOperand {
-                    reset()
-                }
-                
                 setOperand(value)
                 description = isPartialResult ? description + operation : operation
-                
-                //accumulator = value
                 
                 endsWithOperand = true
                 
@@ -175,7 +169,7 @@ class CalculatorBrain {
                 
                 description = isPartialResult ? description + "\(random!)" : "\(random!)"
                 
-                accumulator = random!
+                setOperand(random!)
                 
                 endsWithOperand = true
             }

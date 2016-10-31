@@ -123,11 +123,11 @@ class ViewController: UIViewController {
     
     // constant or random button pressed
     @IBAction func performOperandInput(_ sender: UIButton) {
-        if shouldResetBrain {
+        if shouldResetBrain || brain.endsInOperand {
             brain.reset()
             shouldResetBrain = false
         }
-                
+        
         // perform the operation
         if let operation = sender.currentTitle {
             brain.performOperation(operation)
