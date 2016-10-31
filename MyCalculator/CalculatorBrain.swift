@@ -159,7 +159,6 @@ class CalculatorBrain {
             case .Binary(let function):
                 
                 let descLen = description.characters.count
-                print(descLen)
                 
                 switch (isPartialResult, endsWithOperand) {
                 case (true,true):
