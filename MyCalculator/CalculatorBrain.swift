@@ -132,15 +132,22 @@ class CalculatorBrain {
                     reset()
                 }
                 
+                setOperand(value)
                 description = isPartialResult ? description + operation : operation
                 
-                accumulator = value
+                //accumulator = value
                 
                 endsWithOperand = true
                 
             case .Unary(let function):
                 
-                description = isPartialResult ? description + operation + "(\(String(accumulator)))" : (endsWithOperand ? operation + "(\(description))" : operation + "(\(String(accumulator)))")
+                if isPartialResult && endsWithOperand {
+                    let lastChar = description[description.index(before: description.endIndex)]
+                    description.remove(at: description.index(before: description.endIndex))
+                    description = description + operation + String(lastChar)
+                } else {
+                    description = isPartialResult ? description + operation + "(\(String(accumulator)))" : (endsWithOperand ? operation + "(\(description))" : operation + "(\(String(accumulator)))")
+                }
                 
                 accumulator = function(accumulator)
                 
@@ -148,7 +155,7 @@ class CalculatorBrain {
                 
             case .Binary(let function):
                 
-                description = isPartialResult ? description + String(accumulator) + operation : (endsWithOperand ? description + operation : String(accumulator) + operation)
+                description = isPartialResult ? (endsWithOperand ? description + operation : description + String(accumulator) + operation ): (endsWithOperand ? description + operation : String(accumulator) + operation)
                 
                 executePendingBinaryOp()
                 pending = pendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)

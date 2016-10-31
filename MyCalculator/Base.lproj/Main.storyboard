@@ -70,7 +70,7 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
                                                 <state key="normal" title="π"/>
                                                 <connections>
-                                                    <action selector="performOperation:" destination="BYZ-38-t0r" eventType="touchUpInside" id="434-eV-RTc"/>
+                                                    <action selector="performOperandInput:" destination="BYZ-38-t0r" eventType="touchUpInside" id="7Mz-x5-whf"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="45l-VI-MTY">
@@ -142,7 +142,7 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
                                                 <state key="normal" title="e"/>
                                                 <connections>
-                                                    <action selector="performOperation:" destination="BYZ-38-t0r" eventType="touchUpInside" id="JNw-am-pqw"/>
+                                                    <action selector="performOperandInput:" destination="BYZ-38-t0r" eventType="touchUpInside" id="LyH-kv-UOi"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="65T-cK-aMH">
@@ -250,7 +250,7 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
                                                 <state key="normal" title="C"/>
                                                 <connections>
-                                                    <action selector="reset:" destination="BYZ-38-t0r" eventType="touchUpInside" id="RDF-Np-VD0"/>
+                                                    <action selector="reset" destination="BYZ-38-t0r" eventType="touchUpInside" id="eRb-Eu-tet"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5nt-DH-XR8">
@@ -258,7 +258,7 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
                                                 <state key="normal" title="back"/>
                                                 <connections>
-                                                    <action selector="backspace:" destination="BYZ-38-t0r" eventType="touchUpInside" id="ZnD-IL-nkS"/>
+                                                    <action selector="backspace" destination="BYZ-38-t0r" eventType="touchUpInside" id="qXR-tW-gYD"/>
                                                 </connections>
                                             </button>
                                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bTM-4d-xNo">
@@ -266,7 +266,7 @@
                                                 <fontDescription key="fontDescription" type="system" pointSize="30"/>
                                                 <state key="normal" title="Ran"/>
                                                 <connections>
-                                                    <action selector="performOperation:" destination="BYZ-38-t0r" eventType="touchUpInside" id="GfR-3o-Boc"/>
+                                                    <action selector="performOperandInput:" destination="BYZ-38-t0r" eventType="touchUpInside" id="ipt-JK-PP4"/>
                                                 </connections>
                                             </button>
                                         </subviews>

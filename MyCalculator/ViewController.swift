@@ -83,13 +83,18 @@ class ViewController: UIViewController {
     // backspace button
     @IBAction private func backspace() {
         if middleOfTyping {
-            if displayValue != nil {
+            if display.text != " " {
                 var currentText = display.text!
                 currentText.remove(at: currentText.index(before: currentText.endIndex))
                 if currentText == "" {
                     displayValue = nil
                 } else {
-                    displayValue = Double(currentText)
+                    if CalculatorBrain.containsValidNumber(currentText) {
+                        displayValue = Double(currentText)
+                    } else {
+                        displayValue = nil
+                        display.text = "."
+                    }
                 }
             }
         } else {
@@ -114,6 +119,27 @@ class ViewController: UIViewController {
         middleOfTyping = false
         equation.text = "0"
         displayValue = 0
+    }
+    
+    // constant or random button pressed
+    @IBAction func performOperandInput(_ sender: UIButton) {
+        if shouldResetBrain {
+            brain.reset()
+            shouldResetBrain = false
+        }
+                
+        // perform the operation
+        if let operation = sender.currentTitle {
+            brain.performOperation(operation)
+        }
+        
+        // update the displays
+        displayValue = brain.output
+        equationValue = brain.desc
+        
+        // no longer in the middle of typing numbers
+        middleOfTyping = false
+
     }
     
     // operation button pressed, perform operation
