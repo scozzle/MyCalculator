@@ -19,6 +19,13 @@ class CalculatorBrain {
     // does the current description end with an operand?
     private var endsWithOperand = false
     
+    // access to above
+    var endsInOperand: Bool {
+        get {
+            return endsWithOperand
+        }
+    }
+    
     // description string accessible from outside
     var desc: String {
         get {
@@ -96,7 +103,7 @@ class CalculatorBrain {
     // set the operand
     func setOperand(_ operand: Double) {
         accumulator = operand
-        //        internalProgram.append(operand)
+        internalProgram.append(operand as AnyObject)
         
     }
     
@@ -106,12 +113,13 @@ class CalculatorBrain {
         pending = nil
         description = ""
         endsWithOperand = false
-        //internalProgram.removeAll()
+        internalProgram.removeAll()
     }
     
     
     // perform the operation given in the argument
     func performOperation(_ operation: String) {
+        internalProgram.append(operation as AnyObject)
 
         // variable used if "Rand" operation is performed
         var random: Double? = nil
@@ -139,7 +147,7 @@ class CalculatorBrain {
                 endsWithOperand = true
                 
             case .Binary(let function):
-                print(accumulator)
+                
                 description = isPartialResult ? description + String(accumulator) + operation : (endsWithOperand ? description + operation : String(accumulator) + operation)
                 
                 executePendingBinaryOp()
@@ -168,16 +176,26 @@ class CalculatorBrain {
     }
     
     // storing program
-    //private var internalProgram = [AnyObject]()
-    //typealias PropertyList = AnyObject
-/*    var program: PropertyList {
+    private var internalProgram = [AnyObject]()
+    
+    typealias PropertyList = AnyObject
+    var program: PropertyList {
         get {
-            return internalProgram
-        }
-        set {
+            return internalProgram as CalculatorBrain.PropertyList
+        } set {
             reset()
+            if let arrayOfOps = newValue as? [AnyObject] {
+                for op in arrayOfOps {
+                    if let operand = op as? Double {
+                        setOperand(operand)
+                    }
+                    if let operation = op as? String {
+                        performOperation(operation)
+                    }
+                }
+            }
         }
-    }*/
+    }
     
     
 }

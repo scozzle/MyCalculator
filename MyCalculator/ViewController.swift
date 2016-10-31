@@ -81,7 +81,7 @@ class ViewController: UIViewController {
     }
     
     // backspace button
-    @IBAction private func backspace(_ sender: UIButton) {
+    @IBAction private func backspace() {
         if middleOfTyping {
             if displayValue != nil {
                 var currentText = display.text!
@@ -109,7 +109,7 @@ class ViewController: UIViewController {
     }
     
     // reset the calculator
-    @IBAction private func reset(_ sender: UIButton) {
+    @IBAction private func reset() {
         brain.reset()
         middleOfTyping = false
         equation.text = "0"
@@ -126,7 +126,6 @@ class ViewController: UIViewController {
         // if new equation is starting, reset brain
         if shouldResetBrain {
             brain.reset()
-            print("here")
             shouldResetBrain = false
         }
         
