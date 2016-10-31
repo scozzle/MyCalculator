@@ -16,6 +16,9 @@ class CalculatorBrain {
     // the description string
     private var description = ""
     
+    // the index in description of the last binary operation symbol
+    private var lastOpSymIndex: Int?
+    
     // does the current description end with an operand?
     private var endsWithOperand = false
     
@@ -113,6 +116,7 @@ class CalculatorBrain {
         pending = nil
         description = ""
         endsWithOperand = false
+        lastOpSymIndex = nil
         internalProgram.removeAll()
     }
     
@@ -135,12 +139,17 @@ class CalculatorBrain {
                 
             case .Unary(let function):
                 
-                if isPartialResult && endsWithOperand {
-                    let lastChar = description[description.index(before: description.endIndex)]
-                    description.remove(at: description.index(before: description.endIndex))
-                    description = description + operation + String(lastChar)
-                } else {
-                    description = isPartialResult ? description + operation + "(\(String(accumulator)))" : (endsWithOperand ? operation + "(\(description))" : operation + "(\(String(accumulator)))")
+                switch (isPartialResult, endsWithOperand) {
+                case (true,true):
+                    let prefix = description.substring(to: description.index(description.startIndex, offsetBy: lastOpSymIndex!+1))
+                    let suffix = description.substring(from: description.index(description.startIndex, offsetBy: lastOpSymIndex!+1))
+                    description = prefix + operation + "(\(suffix))"
+                case (true,false):
+                    description = description + operation + "(\(String(accumulator)))"
+                case (false,true):
+                    description = operation + "(\(description))"
+                case (false,false):
+                    description = operation + "(\(String(accumulator)))"
                 }
                 
                 accumulator = function(accumulator)
@@ -149,7 +158,23 @@ class CalculatorBrain {
                 
             case .Binary(let function):
                 
-                description = isPartialResult ? (endsWithOperand ? description + operation : description + String(accumulator) + operation ): (endsWithOperand ? description + operation : String(accumulator) + operation)
+                let descLen = description.characters.count
+                print(descLen)
+                
+                switch (isPartialResult, endsWithOperand) {
+                case (true,true):
+                    description = description + operation
+                    lastOpSymIndex = descLen
+                case (true, false):
+                    description = description + String(accumulator) + operation
+                    lastOpSymIndex = descLen + String(accumulator).characters.count
+                case (false, true):
+                    description = description + operation
+                    lastOpSymIndex = descLen
+                case (false,false):
+                    description = String(accumulator) + operation
+                    lastOpSymIndex = String(accumulator).characters.count
+                }
                 
                 executePendingBinaryOp()
                 pending = pendingBinaryOperationInfo(binaryFunction: function, firstOperand: accumulator)
