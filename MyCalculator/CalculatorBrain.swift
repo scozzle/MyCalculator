@@ -46,6 +46,7 @@ class CalculatorBrain {
     
     private var accumulator = 0.0
     
+    private var prevDescription = ""
     private var description = ""
     
     // the index, in description, of the last binary operation symbol
@@ -80,15 +81,12 @@ class CalculatorBrain {
                 for op in arrayOfOps {
                     if let operand = op as? Double {
                         setOperand(operand)
-                        print("operand: \(operand)")
                     }
                     if let operation = op as? String {
                         if variableValues.index(forKey: operation) != nil {
                             setOperand(variableValues[operation]!)
-                            print("variable operand: \(operation)")
                         } else {
                             performOperation(operation)
-                            print("operation: \(operation)")
                         }
                     }
                 }
@@ -130,7 +128,6 @@ class CalculatorBrain {
      * class functions
      */
     
-    
     private func executePendingBinaryOp() {
         if pending != nil {
             accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
@@ -140,8 +137,11 @@ class CalculatorBrain {
     
     func rerunProgram() {
         let oldDesc = description
+        let oldProgram = program
+        // nothing is changed, doing this just to rerun the program in the computed variable program, where variables might have changed in value
         program = internalProgram as CalculatorBrain.PropertyList
         description = oldDesc
+        program = oldProgram
     }
     
     func setOperand(_ operand: Double) {
@@ -178,9 +178,18 @@ class CalculatorBrain {
         variableValues.removeAll()
     }
     
+    func undo() {
+        let tempDescription = prevDescription
+        internalProgram.popLast()
+        program = internalProgram as CalculatorBrain.PropertyList
+        description = tempDescription
+    }
+    
     func performOperation(_ operation: String) {
         
         internalProgram.append(operation as AnyObject)
+        
+        prevDescription = description
         
         if let symbol = operations[operation] {
             switch symbol {

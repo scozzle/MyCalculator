@@ -192,6 +192,17 @@ class ViewController: UIViewController {
         middleOfTyping = false
     }
     
+    // undo button pressed
+    @IBAction func undoPressed() {
+        if middleOfTyping {
+            backspace()
+        } else {
+            brain.undo()
+            displayValue = brain.output
+            equationValue = brain.desc
+        }
+    }
+    
     // operation button pressed
     @IBAction private func performOperation(_ sender: UIButton) {
         if !CalculatorBrain.containsValidNumber(display.text!) {
