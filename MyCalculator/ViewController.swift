@@ -10,36 +10,23 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    // Instantiation of the CalculatorBrain
-    private var brain = CalculatorBrain()
+    /*
+     * internal variables
+     */
     
-    // the user in the middle of typing an operand?
-    private var middleOfTyping = false
+    private var brain = CalculatorBrain() // The CalculatorBrain model.
     
-    // number of fractional digits
-    private var numFractionalDigits = 6
+    private var middleOfTyping = false // the user in the middle of typing an operand?
+    
+    private var numFractionalDigits = 6 // number of fractional digits
 
-    // should reset brain?
-    private var shouldResetBrain = false
+    private var shouldResetBrain = false // should reset brain?
     
-    // the display
-    @IBOutlet private weak var display: UILabel!
+    @IBOutlet private weak var display: UILabel! // the display label
     
-    // the equation
-    @IBOutlet private weak var equation: UILabel!
+    @IBOutlet private weak var equation: UILabel! // the equation label
     
-    // format the double to have at most i fractional digits and return the string form
-    private func cutFractional(_ val: Double, i: Int) -> String{
-        let formatter = NumberFormatter()
-        formatter.maximumFractionDigits = i
-        let newText = (val.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(val)) : String(val)
-        let nsNumber = NSNumber(value: Double(newText)!)
-        return formatter.string(from: nsNumber)!
-        
-    }
-    
-    // the number on the display
-    private var displayValue: Double? {
+    private var displayValue: Double? { // the number on the display
         get {
             return display.text == " " ? nil : Double(display.text!)
         }
@@ -51,6 +38,42 @@ class ViewController: UIViewController {
             }
         }
     }
+    
+    private var equationValue: String { // equation string with "=" or "..." added depending on result partial or not
+        get {
+            return equation.text!
+        }
+        set(newVal) {
+            let addText = brain.isPartialResult ? "..." : "="
+            equation.text = newVal + addText
+        }
+    }
+    
+    /*
+     * Helper Functions
+     */
+    
+    // format the double to have at most i fractional digits and return the string form
+    private func cutFractional(_ val: Double, i: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.maximumFractionDigits = i
+        let newText = (val.truncatingRemainder(dividingBy: 1) == 0) ? String(Int(val)) : String(val)
+        let nsNumber = NSNumber(value: Double(newText)!)
+        return formatter.string(from: nsNumber)!
+    }
+    
+    // reset the calculator
+    @IBAction private func reset() {
+        brain.reset()
+        middleOfTyping = false
+        equation.text = "0"
+        displayValue = 0
+        shouldResetBrain = false
+    }
+    
+    /*
+     * Action functions called from View
+     */
     
     // numerical button pressed
     @IBAction private func buttonPressed(_ sender: UIButton) {
@@ -66,8 +89,6 @@ class ViewController: UIViewController {
     
     // dot pressed
     @IBAction func dotPressed(_ sender: UIButton) {
-         // if does not end with dot, add dot at the end
-        
         // if nothing in display set to dot
         if display.text == " " || (!brain.isPartialResult && !middleOfTyping) {
             display.text = "."
@@ -102,25 +123,6 @@ class ViewController: UIViewController {
         }
     }
     
-    // equation string with "=" or "..." added depending on result partial or not
-    private var equationValue: String {
-        get {
-            return equation.text!
-        }
-        set(newVal) {
-            let addText = brain.isPartialResult ? "..." : "="
-            equation.text = newVal + addText
-        }
-    }
-    
-    // reset the calculator
-    @IBAction private func reset() {
-        brain.reset()
-        middleOfTyping = false
-        equation.text = "0"
-        displayValue = 0
-    }
-    
     // constant or random button pressed
     @IBAction func performOperandInput(_ sender: UIButton) {
         if shouldResetBrain || brain.endsInOperand {
@@ -128,46 +130,37 @@ class ViewController: UIViewController {
             shouldResetBrain = false
         }
         
-        // perform the operation
         if let operation = sender.currentTitle {
             brain.performOperation(operation)
         }
         
-        // update the displays
         displayValue = brain.output
         equationValue = brain.desc
         
-        // no longer in the middle of typing numbers
         middleOfTyping = false
 
     }
     
-    // operation button pressed, perform operation
+    // operation button pressed
     @IBAction private func performOperation(_ sender: UIButton) {
-        // check if the string in display is a valid number first
         if !CalculatorBrain.containsValidNumber(display.text!) {
             return
         }
         
-        // if new equation is starting, reset brain
         if shouldResetBrain {
             brain.reset()
             shouldResetBrain = false
         }
         
-        // set the operand to the current number on display
         brain.setOperand(displayValue!)
         
-        // perform the operation
         if let operation = sender.currentTitle {
             brain.performOperation(operation)
         }
         
-        // update the displays
         displayValue = brain.output
         equationValue = brain.desc
         
-        // no longer in the middle of typing numbers
         middleOfTyping = false
     }
 }

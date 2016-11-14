@@ -10,47 +10,10 @@ import Foundation
 
 class CalculatorBrain {
     
-    // the current accumulator or operand
-    private var accumulator = 0.0
-    
-    // the description string
-    private var description = ""
-    
-    // the index in description of the last binary operation symbol
-    private var lastOpSymIndex: Int?
-    
-    // does the current description end with an operand?
-    private var endsWithOperand = false
-    
-    // access to above
-    var endsInOperand: Bool {
-        get {
-            return endsWithOperand
-        }
-    }
-    
-    // description string accessible from outside
-    var desc: String {
-        get {
-            return description
-        }
-    }
-    
-    // the output
-    var output: Double {
-        get {
-            return accumulator
-        }
-    }
-    
-    // is it a partial result, i.e. there is pending binary operation
-    var isPartialResult: Bool {
-        get {
-            return (pending != nil)
-        }
-    }
-    
-    // operator types
+    /*
+     * internal variables, enums, data structure
+     */
+
     private enum OperatorType {
         case Constant(Double)
         case Unary((Double) -> Double)
@@ -59,7 +22,6 @@ class CalculatorBrain {
         case Random(() -> Double)
     }
     
-    // all operations available
     private var operations: Dictionary<String,OperatorType> = [
         "π": OperatorType.Constant(M_PI),
         "e": OperatorType.Constant(M_E),
@@ -77,24 +39,80 @@ class CalculatorBrain {
         "Ran": OperatorType.Random(drand48)
     ]
     
-    // model the pending binary operation info saved for later
     private struct pendingBinaryOperationInfo {
         var binaryFunction: (Double, Double) -> Double
         var firstOperand: Double
     }
     
-    // the pending binary info
     private var pending: pendingBinaryOperationInfo?
     
-    // execute the pending binary operation if there is one
-    private func executePendingBinaryOp() {
-        if pending != nil {
-            accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
-            pending = nil
+    private var accumulator = 0.0
+    
+    private var description = ""
+    
+    // the index, in description, of the last binary operation symbol
+    private var lastOpSymIndex: Int?
+    
+    // does the current description end with an operand?
+    private var endsWithOperand = false
+    
+    // stores the sequence of operations and operands
+    private var internalProgram = [AnyObject]()
+    
+    /*
+     * accessible variables
+     */
+    
+    var variableValues = Dictionary<String, Double>()
+    
+    var endsInOperand: Bool {
+        get {
+            return endsWithOperand
         }
     }
     
-    // check if numString contains a valid number
+    typealias PropertyList = AnyObject
+    
+    var program: PropertyList {
+        get {
+            return internalProgram as CalculatorBrain.PropertyList
+        } set {
+            reset()
+            if let arrayOfOps = newValue as? [AnyObject] {
+                for op in arrayOfOps {
+                    if let operand = op as? Double {
+                        setOperand(operand)
+                    }
+                    if let operation = op as? String {
+                        performOperation(operation)
+                    }
+                }
+            }
+        }
+    }
+    
+    var desc: String {
+        get {
+            return description
+        }
+    }
+    
+    var output: Double {
+        get {
+            return accumulator
+        }
+    }
+    
+    var isPartialResult: Bool {
+        get {
+            return (pending != nil)
+        }
+    }
+    
+    /*
+     * helper functions
+     */
+    
     static func containsValidNumber(_ numString: String) -> Bool {
         if Double(numString) != nil {
             return true
@@ -103,14 +121,30 @@ class CalculatorBrain {
         }
     }
     
-    // set the operand
+    /*
+     * class functions
+     */
+    
+    private func executePendingBinaryOp() {
+        if pending != nil {
+            accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
+            pending = nil
+        }
+    }
+    
     func setOperand(_ operand: Double) {
         accumulator = operand
         internalProgram.append(operand as AnyObject)
-        
     }
     
-    // reset everything
+    func setOperand(_ variableName: String) {
+        if variableValues.index(forKey: variableName) != nil {
+            // variable name exists
+        } else {
+            // new variable name
+        }
+    }
+    
     func reset() {
         accumulator = 0.0
         pending = nil
@@ -120,12 +154,11 @@ class CalculatorBrain {
         internalProgram.removeAll()
     }
     
-    
-    // perform the operation given in the argument
     func performOperation(_ operation: String) {
+        
         internalProgram.append(operation as AnyObject)
-
-        // variable used if "Rand" operation is performed
+        
+        // variable to be used if "Rand" operation
         var random: Double? = nil
         
         if let symbol = operations[operation] {
@@ -199,28 +232,4 @@ class CalculatorBrain {
             }
         }
     }
-    
-    // storing program
-    private var internalProgram = [AnyObject]()
-    
-    typealias PropertyList = AnyObject
-    var program: PropertyList {
-        get {
-            return internalProgram as CalculatorBrain.PropertyList
-        } set {
-            reset()
-            if let arrayOfOps = newValue as? [AnyObject] {
-                for op in arrayOfOps {
-                    if let operand = op as? Double {
-                        setOperand(operand)
-                    }
-                    if let operation = op as? String {
-                        performOperation(operation)
-                    }
-                }
-            }
-        }
-    }
-    
-    
 }
