@@ -87,9 +87,17 @@ class ViewController: UIViewController {
         middleOfTyping = true
     }
     
+    // random button pressed
+    @IBAction func randomPressed() {
+        let r = drand48()
+        displayValue = r
+        if !brain.isPartialResult || middleOfTyping {
+            shouldResetBrain = true
+        }
+    }
+    
     // dot pressed
     @IBAction func dotPressed(_ sender: UIButton) {
-        // if nothing in display set to dot
         if display.text == " " || (!brain.isPartialResult && !middleOfTyping) {
             display.text = "."
             shouldResetBrain = true
@@ -104,41 +112,84 @@ class ViewController: UIViewController {
     // backspace button
     @IBAction private func backspace() {
         if middleOfTyping {
-            if display.text != " " {
-                var currentText = display.text!
-                currentText.remove(at: currentText.index(before: currentText.endIndex))
-                if currentText == "" {
-                    displayValue = nil
+            var currentText = display.text!
+            currentText.remove(at: currentText.index(before: currentText.endIndex))
+            if currentText == "" {
+                displayValue = nil
+            } else {
+                if CalculatorBrain.containsValidNumber(currentText) {
+                    displayValue = Double(currentText)
                 } else {
-                    if CalculatorBrain.containsValidNumber(currentText) {
-                        displayValue = Double(currentText)
-                    } else {
-                        displayValue = nil
-                        display.text = "."
-                    }
+                    displayValue = nil
+                    display.text = currentText // happens when currentText == "."
                 }
             }
         } else {
             displayValue = nil
+            shouldResetBrain = true
         }
     }
+   
+    // variable button pressed
+    @IBAction func variablePressed(_ sender: UIButton) {
+        if shouldResetBrain || brain.endsInOperand {
+            brain.reset()
+            shouldResetBrain = false
+        }
+        brain.setOperand(sender.currentTitle!)
+        displayValue = brain.output
+        equationValue = brain.desc
+        middleOfTyping = false
+    }
     
-    // constant or random button pressed
+    // want to set the variable value
+    @IBAction func setVariable(_ sender: UIButton) {
+        if !CalculatorBrain.containsValidNumber(display.text!) {
+            return // can't set the variable value
+        }
+        let buttonName = sender.currentTitle!
+        let varName = buttonName.substring(from: buttonName.index(buttonName.startIndex, offsetBy: 1))
+        brain.variableValues[varName] = Double(display.text!)!
+        // need to re-run the internal program with the new value
+        brain.rerunProgram()
+        shouldResetBrain = false
+        displayValue = brain.output
+        equationValue = brain.desc
+    }
+    
+    // constant button pressed
     @IBAction func performOperandInput(_ sender: UIButton) {
         if shouldResetBrain || brain.endsInOperand {
             brain.reset()
             shouldResetBrain = false
         }
-        
         if let operation = sender.currentTitle {
             brain.performOperation(operation)
         }
-        
         displayValue = brain.output
         equationValue = brain.desc
-        
         middleOfTyping = false
 
+    }
+    
+    // equals operation pressed
+    @IBAction func equalsPressed(_ sender: UIButton) {
+        if !CalculatorBrain.containsValidNumber(display.text!) {
+            return
+        }
+        if shouldResetBrain {
+            brain.reset()
+            shouldResetBrain = false
+        }
+        if !brain.endsInOperand {
+            brain.setOperand(displayValue!)
+        }
+        if let operation = sender.currentTitle {
+            brain.performOperation(operation)
+        }
+        displayValue = brain.output
+        equationValue = brain.desc
+        middleOfTyping = false
     }
     
     // operation button pressed
@@ -146,21 +197,18 @@ class ViewController: UIViewController {
         if !CalculatorBrain.containsValidNumber(display.text!) {
             return
         }
-        
         if shouldResetBrain {
             brain.reset()
             shouldResetBrain = false
         }
-        
-        brain.setOperand(displayValue!)
-        
+        if middleOfTyping {
+            brain.setOperand(displayValue!)
+        }
         if let operation = sender.currentTitle {
             brain.performOperation(operation)
         }
-        
         displayValue = brain.output
         equationValue = brain.desc
-        
         middleOfTyping = false
     }
 }

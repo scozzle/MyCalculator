@@ -19,7 +19,6 @@ class CalculatorBrain {
         case Unary((Double) -> Double)
         case Binary((Double,Double) -> Double)
         case Equals
-        case Random(() -> Double)
     }
     
     private var operations: Dictionary<String,OperatorType> = [
@@ -35,8 +34,7 @@ class CalculatorBrain {
         "÷": OperatorType.Binary({$0 / $1}),
         "-": OperatorType.Binary({$0 - $1}),
         "^": OperatorType.Binary(pow),
-        "=": OperatorType.Equals,
-        "Ran": OperatorType.Random(drand48)
+        "=": OperatorType.Equals
     ]
     
     private struct pendingBinaryOperationInfo {
@@ -77,14 +75,21 @@ class CalculatorBrain {
         get {
             return internalProgram as CalculatorBrain.PropertyList
         } set {
-            reset()
+            clear()
             if let arrayOfOps = newValue as? [AnyObject] {
                 for op in arrayOfOps {
                     if let operand = op as? Double {
                         setOperand(operand)
+                        print("operand: \(operand)")
                     }
                     if let operation = op as? String {
-                        performOperation(operation)
+                        if variableValues.index(forKey: operation) != nil {
+                            setOperand(variableValues[operation]!)
+                            print("variable operand: \(operation)")
+                        } else {
+                            performOperation(operation)
+                            print("operation: \(operation)")
+                        }
                     }
                 }
             }
@@ -125,11 +130,18 @@ class CalculatorBrain {
      * class functions
      */
     
+    
     private func executePendingBinaryOp() {
         if pending != nil {
             accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
             pending = nil
         }
+    }
+    
+    func rerunProgram() {
+        let oldDesc = description
+        program = internalProgram as CalculatorBrain.PropertyList
+        description = oldDesc
     }
     
     func setOperand(_ operand: Double) {
@@ -138,11 +150,22 @@ class CalculatorBrain {
     }
     
     func setOperand(_ variableName: String) {
-        if variableValues.index(forKey: variableName) != nil {
-            // variable name exists
-        } else {
-            // new variable name
+        if variableValues.index(forKey: variableName) == nil {
+            variableValues[variableName] = 0.0 // default value 0.0
         }
+        accumulator = variableValues[variableName]!
+        description = description + variableName
+        endsWithOperand = true
+        internalProgram.append(variableName as AnyObject)
+    }
+    
+    func clear() {
+        accumulator = 0.0
+        pending = nil
+        description = ""
+        endsWithOperand = false
+        lastOpSymIndex = nil
+        internalProgram.removeAll()
     }
     
     func reset() {
@@ -152,14 +175,12 @@ class CalculatorBrain {
         endsWithOperand = false
         lastOpSymIndex = nil
         internalProgram.removeAll()
+        variableValues.removeAll()
     }
     
     func performOperation(_ operation: String) {
         
         internalProgram.append(operation as AnyObject)
-        
-        // variable to be used if "Rand" operation
-        var random: Double? = nil
         
         if let symbol = operations[operation] {
             switch symbol {
@@ -215,18 +236,9 @@ class CalculatorBrain {
                 
             case .Equals:
                 
-                description = isPartialResult ? (endsWithOperand ? description : description + String(accumulator)) : (description)
+                description = isPartialResult ? (endsWithOperand ? description : description + String(accumulator)) : (description == "" ? String(accumulator) : description)
                 
                 executePendingBinaryOp()
-                
-                endsWithOperand = true
-                
-            case .Random(let function):
-                random = function()
-                
-                description = isPartialResult ? description + "\(random!)" : "\(random!)"
-                
-                setOperand(random!)
                 
                 endsWithOperand = true
             }
