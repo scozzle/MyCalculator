@@ -140,8 +140,8 @@ class CalculatorBrain {
         let oldProgram = program
         // nothing is changed, doing this just to rerun the program in the computed variable program, where variables might have changed in value
         program = internalProgram as CalculatorBrain.PropertyList
-        description = oldDesc
         program = oldProgram
+        description = oldDesc
     }
     
     func setOperand(_ operand: Double) {
@@ -179,10 +179,10 @@ class CalculatorBrain {
     }
     
     func undo() {
-        let tempDescription = prevDescription
+        //let tempDescription = prevDescription
         internalProgram.popLast()
         program = internalProgram as CalculatorBrain.PropertyList
-        description = tempDescription
+        //description = tempDescription
     }
     
     func performOperation(_ operation: String) {

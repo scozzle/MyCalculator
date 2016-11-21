@@ -22,9 +22,9 @@ class ViewController: UIViewController {
 
     private var shouldResetBrain = false // should reset brain?
     
-    @IBOutlet private weak var display: UILabel! // the display label
     
-    @IBOutlet private weak var equation: UILabel! // the equation label
+    @IBOutlet private weak var equation: UILabel!
+    @IBOutlet private weak var display: UILabel!
     
     private var displayValue: Double? { // the number on the display
         get {
