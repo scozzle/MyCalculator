@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CalculatorViewController: UIViewController {
     
     /*
      * internal variables
@@ -16,12 +16,11 @@ class ViewController: UIViewController {
     
     private var brain = CalculatorBrain() // The CalculatorBrain model.
     
-    private var middleOfTyping = false // the user in the middle of typing an operand?
+    private var middleOfTyping = false // is the user in the middle of typing an operand?
     
     private var numFractionalDigits = 6 // number of fractional digits
 
     private var shouldResetBrain = false // should reset brain?
-    
     
     @IBOutlet private weak var equation: UILabel!
     @IBOutlet private weak var display: UILabel!
